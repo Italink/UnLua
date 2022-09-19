@@ -166,14 +166,13 @@ namespace UnLua
 
         virtual void NotifyUObjectDeleted(const UObjectBase* Object, int32 Index) override
         {
-             UE_LOG(LogTemp, Log, TEXT("NotifyUObjectDeleted : %p"), Object);
-            if (!bIsActive)
+            if (UnLua::FLuaEnv::GetAll().IsEmpty())
                 return;
 
             if (FClassRegistry::StaticUnregister(Object))
                 return;
 
-            //FEnumRegistry::StaticUnregister(Object);
+            FEnumRegistry::StaticUnregister(Object);
         }
 
         virtual void OnUObjectArrayShutdown() override

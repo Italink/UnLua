@@ -68,13 +68,19 @@ namespace UnLua
         return Ret;
     }
 
-    bool FEnumRegistry::Unregister(const UObjectBase* Enum)
+    bool FEnumRegistry::StaticUnregister(const UObjectBase* Enum)
     {
-        FEnumDesc* EnumDesc;
-        if (!Enums.RemoveAndCopyValue((UEnum*)Enum, EnumDesc))
-            return false;
-        EnumDesc->UnLoad();
-        return true;
+        bool Ret = false;
+        for (auto& Env : UnLua::FLuaEnv::GetAll()) {
+            FEnumRegistry* EnumRegistry = Env.Value->GetEnumRegistry();
+            FEnumDesc* EnumDesc;
+            if (!EnumRegistry->Enums.RemoveAndCopyValue((UEnum*)Enum, EnumDesc)) {
+                continue;
+            }
+            Ret = true;
+            EnumDesc->UnLoad();
+        }
+        return Ret;
     }
 
     FEnumDesc* FEnumRegistry::Register(const char* MetatableName)

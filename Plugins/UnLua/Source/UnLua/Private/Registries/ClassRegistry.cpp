@@ -124,7 +124,7 @@ namespace UnLua
 
     bool FClassRegistry::StaticUnregister(const UObjectBase* Type)
     {
-        bool ret = false;
+        bool Ret = false;
         for (auto Pair : FLuaEnv::AllEnvs)
         {
             FClassDesc* ClassDesc;
@@ -134,9 +134,9 @@ namespace UnLua
             ClassDesc->UnLoad();
             auto Registry = Pair.Value->GetClassRegistry();
             Registry->Unregister(ClassDesc);
-            ret = true;
+            Ret = true;
         }
-        return ret;
+        return Ret;
     }
 
     bool FClassRegistry::PushMetatable(lua_State* L, const char* MetatableName)
