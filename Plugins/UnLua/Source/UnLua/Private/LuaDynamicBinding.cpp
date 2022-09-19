@@ -22,7 +22,7 @@ bool FLuaDynamicBinding::IsValid(UClass *InClass) const
     return Class && Class == InClass && ModuleName.Len() > 0;
 }
 
-bool FLuaDynamicBinding::Push(UClass *InClass, const TCHAR *InModuleName, int32 InInitializerTableRef)
+bool FLuaDynamicBinding::Push(lua_State* InL, UClass *InClass, const TCHAR *InModuleName, int32 InInitializerTableRef)
 {
     FLuaDynamicBindingStackNode StackNode;
 
@@ -32,6 +32,7 @@ bool FLuaDynamicBinding::Push(UClass *InClass, const TCHAR *InModuleName, int32 
 
     Stack.Push(StackNode);
 
+    L = InL;
     Class = InClass;
     ModuleName = InModuleName;
     InitializerTableRef = InInitializerTableRef;
@@ -46,6 +47,7 @@ int32 FLuaDynamicBinding::Pop()
     FLuaDynamicBindingStackNode StackNode = Stack.Pop();
     int32 TableRef = InitializerTableRef;
 
+    L = StackNode.L;
     Class = StackNode.Class;
     ModuleName = StackNode.ModuleName;
     InitializerTableRef = StackNode.InitializerTableRef;
@@ -53,12 +55,12 @@ int32 FLuaDynamicBinding::Pop()
     return TableRef;
 }
 
-FScopedLuaDynamicBinding::FScopedLuaDynamicBinding(lua_State *InL, UClass *Class, const TCHAR *ModuleName, int32 InitializerTableRef)
+FScopedLuaDynamicBinding::FScopedLuaDynamicBinding(lua_State* InL, UClass* Class, const TCHAR* ModuleName, int32 InitializerTableRef)
     : L(InL), bValid(false)
 {
     if (L)
     {
-        bValid = GLuaDynamicBinding.Push(Class, ModuleName, InitializerTableRef);
+        bValid = GLuaDynamicBinding.Push(InL, Class, ModuleName, InitializerTableRef);
     }
 }
 

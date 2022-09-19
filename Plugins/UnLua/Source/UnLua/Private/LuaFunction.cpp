@@ -39,13 +39,7 @@ static UClass* MakeOrphanedClass(const UClass* Class)
 DEFINE_FUNCTION(ULuaFunction::execCallLua)
 {
     const auto LuaFunction = Cast<ULuaFunction>(Stack.CurrentNativeFunction);
-    const auto Env = IUnLuaModule::Get().GetEnv(Context);
-    if (!Env)
-    {
-        // PIE 结束时可能已经没有Lua环境了
-        return;
-    }
-    Env->GetFunctionRegistry()->Invoke(LuaFunction, Context, Stack, RESULT_PARAM);
+    LuaFunction->Invoke(Context, Stack, RESULT_PARAM);
 }
 
 bool ULuaFunction::IsOverridable(const UFunction* Function)
@@ -55,7 +49,7 @@ bool ULuaFunction::IsOverridable(const UFunction* Function)
     return Function->HasAnyFunctionFlags(FUNC_BlueprintEvent) || (Function->FunctionFlags & FlagMask) == FlagResult;
 }
 
-bool ULuaFunction::Override(UFunction* Function, UClass* Outer, FName NewName)
+bool ULuaFunction::Override(UFunction* Function, UClass* Outer, FName NewName, UnLua::FLuaEnv * Env)
 {
     ULuaFunction* LuaFunction;
     const auto bReplace = Function->GetOuter() == Outer;
@@ -95,7 +89,7 @@ bool ULuaFunction::Override(UFunction* Function, UClass* Outer, FName NewName)
     LuaFunction->Overridden = Function->IsA<ULuaFunction>() ? static_cast<ULuaFunction*>(Function)->GetOverridden() : Function;
     LuaFunction->ClearInternalFlags(EInternalObjectFlags::Native);
     LuaFunction->SetNativeFunc(execCallLua);
-
+    LuaFunction->Env = Env;
     if (bReplace)
         LuaFunction->SetSuperStruct(Function->GetSuperStruct());
     else
@@ -247,6 +241,13 @@ void ULuaFunction::GetOverridableFunctions(UClass* Class, TMap<FName, UFunction*
 void ULuaFunction::Initialize()
 {
     Desc = MakeShared<FFunctionDesc>(this, nullptr);
+}
+
+void ULuaFunction::Invoke(UObject* Context, FFrame& Stack, RESULT_DECL)
+{
+    if (!Env)
+        return;
+    Env->GetFunctionRegistry()->Invoke(this, Context, Stack, RESULT_PARAM);
 }
 
 UFunction* ULuaFunction::GetOverridden() const

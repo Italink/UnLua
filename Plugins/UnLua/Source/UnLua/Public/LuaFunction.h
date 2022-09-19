@@ -35,7 +35,7 @@ public:
     */
     static bool IsOverridable(const UFunction* Function);
 
-    static bool Override(UFunction* Function, UClass* Outer, FName NewName);
+    static bool Override(UFunction* Function, UClass* Outer, FName NewName, UnLua::FLuaEnv* Env);
 
     /**
      * 还原指定UClass上所有覆写的UFunction。
@@ -68,6 +68,8 @@ public:
 
     void Initialize();
 
+    void Invoke(UObject* Context, FFrame& Stack, RESULT_DECL);
+
     UFunction* GetOverridden() const;
 
 #if WITH_EDITOR
@@ -75,6 +77,7 @@ public:
 #endif
 
 private:
+    UnLua::FLuaEnv* Env = nullptr;
     TWeakObjectPtr<UFunction> Overridden;
     TSharedPtr<FFunctionDesc> Desc;
     static TMap<UClass*, UClass*> SuspendedOverrides;

@@ -173,4 +173,31 @@ namespace UnLua
         bool bObjectArrayListenerRegistered;
         bool bStarted;
     };
+
+
+    class UNLUA_API FLuaEditorEnv: public FLuaEnv{
+    public:
+        FLuaEditorEnv() {
+            EditorEnvs.Add(this);
+        }
+
+        ~FLuaEditorEnv() {
+            EditorEnvs.Remove(this);
+            TArray<FString> RemoveKeyList;
+            for (auto Pair : Class2Env) {
+                if (Pair.Value == this) {
+                    RemoveKeyList.Add(Pair.Key);
+                }
+            }
+            for (auto Key : RemoveKeyList) {
+                Class2Env.Remove(Key);
+            }
+        }
+        void RegisterClass(FString InClassPathName) {
+            check(!Class2Env.Contains(InClassPathName));
+            Class2Env.Add(InClassPathName, this);
+        }
+        inline static TMap<FString, FLuaEditorEnv*> Class2Env;
+        inline static TArray<FLuaEditorEnv*> EditorEnvs;
+    };
 }

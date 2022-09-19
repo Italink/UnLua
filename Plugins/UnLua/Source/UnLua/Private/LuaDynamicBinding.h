@@ -25,12 +25,14 @@ struct FLuaDynamicBinding
 
     bool IsValid(UClass *InClass) const;
 
+    lua_State* L;
     UClass *Class;
     FString ModuleName;
     int32 InitializerTableRef;
 
     struct FLuaDynamicBindingStackNode
     {
+        lua_State* L;
         UClass *Class;
         FString ModuleName;
         int32 InitializerTableRef;
@@ -38,7 +40,7 @@ struct FLuaDynamicBinding
 
     TArray<FLuaDynamicBindingStackNode> Stack;
 
-    bool Push(UClass *InClass, const TCHAR *InModuleName, int32 InInitializerTableRef);
+    bool Push(lua_State* InL, UClass *InClass, const TCHAR *InModuleName, int32 InInitializerTableRef);
     int32 Pop();
 };
 
@@ -46,13 +48,13 @@ extern FLuaDynamicBinding GLuaDynamicBinding;
 
 struct lua_State;
 
-class FScopedLuaDynamicBinding
+class UNLUA_API FScopedLuaDynamicBinding
 {
 public:
     FScopedLuaDynamicBinding(lua_State *InL, UClass *Class, const TCHAR *ModuleName, int32 InitializerTableRef);
     ~FScopedLuaDynamicBinding();
 
 private:
-    lua_State *L;
+    lua_State* L;
     bool bValid;
 };

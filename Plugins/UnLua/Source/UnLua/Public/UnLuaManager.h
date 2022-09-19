@@ -39,6 +39,8 @@ public:
 
     void NotifyUObjectDeleted(const UObjectBase *Object);
 
+    void OverrideLuaFunction(UFunction* Function, UClass* Outer, FName NewName);
+
     void Cleanup();
 
     int GetBoundRef(const UClass* Class);

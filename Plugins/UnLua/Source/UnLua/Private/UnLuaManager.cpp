@@ -128,12 +128,21 @@ void UUnLuaManager::NotifyUObjectDeleted(const UObjectBase* Object)
     Classes.Remove(Class);
 }
 
+void UUnLuaManager::OverrideLuaFunction(UFunction* Function, UClass* Outer, FName NewName)
+{
+    ULuaFunction::Override(Function, Outer, NewName, Env);
+}
+
 /**
  * Clean up...
  */
 void UUnLuaManager::Cleanup()
 {
     Env = nullptr;
+    for (const auto Class : Classes)
+    {
+        ULuaFunction::RestoreOverrides(Class.Key);
+    }
     Classes.Empty();
 }
 
@@ -281,7 +290,7 @@ bool UUnLuaManager::BindClass(UClass* Class, const FString& InModuleName, FStrin
         if (Func)
         {
             UFunction* Function = *Func;
-            ULuaFunction::Override(Function, Class, LuaFuncName);
+            OverrideLuaFunction(Function, Class, LuaFuncName);
         }
     }
 
@@ -294,7 +303,7 @@ bool UUnLuaManager::BindClass(UClass* Class, const FString& InModuleName, FStrin
         for (const auto& LuaFuncName : BindInfo.LuaFunctions)
         {
             if (!BindInfo.UEFunctions.Find(LuaFuncName) && LuaFuncName.ToString().StartsWith(TEXT("AnimNotify_")))
-                ULuaFunction::Override(AnimNotifyFunc, Class, LuaFuncName);
+                OverrideLuaFunction(AnimNotifyFunc, Class, LuaFuncName);
         }
     }
 
@@ -320,7 +329,7 @@ void UUnLuaManager::ReplaceActionInputs(AActor *Actor, UInputComponent *InputCom
         FName FuncName = FName(*FString::Printf(TEXT("%s_%s"), *ActionName, SReadableInputEvent[IAB.KeyEvent]));
         if (LuaFunctions.Find(FuncName))
         {
-            ULuaFunction::Override(InputActionFunc, Class, FuncName);
+            OverrideLuaFunction(InputActionFunc, Class, FuncName);
             IAB.ActionDelegate.BindDelegate(Actor, FuncName);
         }
 
@@ -330,7 +339,7 @@ void UUnLuaManager::ReplaceActionInputs(AActor *Actor, UInputComponent *InputCom
             FuncName = FName(*FString::Printf(TEXT("%s_%s"), *ActionName, SReadableInputEvent[IE]));
             if (LuaFunctions.Find(FuncName))
             {
-                ULuaFunction::Override(InputActionFunc, Class, FuncName);
+                OverrideLuaFunction(InputActionFunc, Class, FuncName);
                 FInputActionBinding AB(Name, IE);
                 AB.ActionDelegate.BindDelegate(Actor, FuncName);
                 InputComponent->AddActionBinding(AB);
@@ -348,7 +357,7 @@ void UUnLuaManager::ReplaceActionInputs(AActor *Actor, UInputComponent *InputCom
             FName FuncName = FName(*FString::Printf(TEXT("%s_%s"), *ActionName.ToString(), SReadableInputEvent[IEs[i]]));
             if (LuaFunctions.Find(FuncName))
             {
-                ULuaFunction::Override(InputActionFunc, Class, FuncName);
+                OverrideLuaFunction(InputActionFunc, Class, FuncName);
                 FInputActionBinding AB(ActionName, IEs[i]);
                 AB.ActionDelegate.BindDelegate(Actor, FuncName);
                 InputComponent->AddActionBinding(AB);
@@ -384,7 +393,7 @@ void UUnLuaManager::ReplaceKeyInputs(AActor *Actor, UInputComponent *InputCompon
         FName FuncName = FName(*FString::Printf(TEXT("%s_%s"), *IKB.Chord.Key.ToString(), SReadableInputEvent[IKB.KeyEvent]));
         if (LuaFunctions.Find(FuncName))
         {
-            ULuaFunction::Override(InputActionFunc, Class, FuncName);
+            OverrideLuaFunction(InputActionFunc, Class, FuncName);
             IKB.KeyDelegate.BindDelegate(Actor, FuncName);
         }
     }
@@ -397,7 +406,7 @@ void UUnLuaManager::ReplaceKeyInputs(AActor *Actor, UInputComponent *InputCompon
             FName FuncName = FName(*FString::Printf(TEXT("%s_%s"), *Keys[i].ToString(), SReadableInputEvent[IE]));
             if (LuaFunctions.Find(FuncName))
             {
-                ULuaFunction::Override(InputActionFunc, Class, FuncName);
+                OverrideLuaFunction(InputActionFunc, Class, FuncName);
                 FInputKeyBinding IKB(FInputChord(Keys[i]), IE);
                 IKB.KeyDelegate.BindDelegate(Actor, FuncName);
                 InputComponent->KeyBindings.Add(IKB);
@@ -417,7 +426,7 @@ void UUnLuaManager::ReplaceKeyInputs(AActor *Actor, UInputComponent *InputCompon
             FName FuncName = FName(*FString::Printf(TEXT("%s_%s"), *Key.ToString(), SReadableInputEvent[IEs[i]]));
             if (LuaFunctions.Find(FuncName))
             {
-                ULuaFunction::Override(InputActionFunc, Class, FuncName);
+                OverrideLuaFunction(InputActionFunc, Class, FuncName);
                 FInputKeyBinding IKB(FInputChord(Key), IEs[i]);
                 IKB.KeyDelegate.BindDelegate(Actor, FuncName);
                 InputComponent->KeyBindings.Add(IKB);
@@ -439,7 +448,7 @@ void UUnLuaManager::ReplaceAxisInputs(AActor *Actor, UInputComponent *InputCompo
         AxisNames.Add(IAB.AxisName);
         if (LuaFunctions.Find(IAB.AxisName))
         {
-            ULuaFunction::Override(InputAxisFunc, Class, IAB.AxisName);
+            OverrideLuaFunction(InputAxisFunc, Class, IAB.AxisName);
             IAB.AxisDelegate.BindDelegate(Actor, IAB.AxisName);
         }
     }
@@ -449,7 +458,7 @@ void UUnLuaManager::ReplaceAxisInputs(AActor *Actor, UInputComponent *InputCompo
     {
         if (LuaFunctions.Find(*It))
         {
-            ULuaFunction::Override(InputAxisFunc, Class, *It);
+            OverrideLuaFunction(InputAxisFunc, Class, *It);
             FInputAxisBinding &IAB = InputComponent->BindAxis(*It);
             IAB.AxisDelegate.BindDelegate(Actor, *It);
         }
@@ -470,7 +479,7 @@ void UUnLuaManager::ReplaceTouchInputs(AActor *Actor, UInputComponent *InputComp
         FName FuncName = FName(*FString::Printf(TEXT("Touch_%s"), SReadableInputEvent[ITB.KeyEvent]));
         if (LuaFunctions.Find(FuncName))
         {
-            ULuaFunction::Override(InputTouchFunc, Class, FuncName);
+            OverrideLuaFunction(InputTouchFunc, Class, FuncName);
             ITB.TouchDelegate.BindDelegate(Actor, FuncName);
         }
     }
@@ -480,7 +489,7 @@ void UUnLuaManager::ReplaceTouchInputs(AActor *Actor, UInputComponent *InputComp
         FName FuncName = FName(*FString::Printf(TEXT("Touch_%s"), SReadableInputEvent[IE]));
         if (LuaFunctions.Find(FuncName))
         {
-            ULuaFunction::Override(InputTouchFunc, Class, FuncName);
+            OverrideLuaFunction(InputTouchFunc, Class, FuncName);
             FInputTouchBinding ITB(IE);
             ITB.TouchDelegate.BindDelegate(Actor, FuncName);
             InputComponent->TouchBindings.Add(ITB);
@@ -499,7 +508,7 @@ void UUnLuaManager::ReplaceAxisKeyInputs(AActor *Actor, UInputComponent *InputCo
         FName FuncName = IAKB.AxisKey.GetFName();
         if (LuaFunctions.Find(FuncName))
         {
-            ULuaFunction::Override(InputAxisFunc, Class, FuncName);
+            OverrideLuaFunction(InputAxisFunc, Class, FuncName);
             IAKB.AxisDelegate.BindDelegate(Actor, FuncName);
         }
     }
@@ -516,7 +525,7 @@ void UUnLuaManager::ReplaceVectorAxisInputs(AActor *Actor, UInputComponent *Inpu
         FName FuncName = IVAB.AxisKey.GetFName();
         if (LuaFunctions.Find(FuncName))
         {
-            ULuaFunction::Override(InputVectorAxisFunc, Class, FuncName);
+            OverrideLuaFunction(InputVectorAxisFunc, Class, FuncName);
             IVAB.AxisDelegate.BindDelegate(Actor, FuncName);
         }
     }
@@ -533,7 +542,7 @@ void UUnLuaManager::ReplaceGestureInputs(AActor *Actor, UInputComponent *InputCo
         FName FuncName = IGB.GestureKey.GetFName();
         if (LuaFunctions.Find(FuncName))
         {
-            ULuaFunction::Override(InputGestureFunc, Class, FuncName);
+            OverrideLuaFunction(InputGestureFunc, Class, FuncName);
             IGB.GestureDelegate.BindDelegate(Actor, FuncName);
         }
     }

@@ -22,11 +22,15 @@ namespace UnLua
     void FFunctionRegistry::Invoke(ULuaFunction* Function, UObject* Context, FFrame& Stack, RESULT_DECL)
     {
         // TODO: refactor
-        if (!Env->GetObjectRegistry()->IsBound(Context))
-            Env->TryBind(Context);
-
+        if (!Env->GetObjectRegistry()->IsBound(Context)) {
+            if (!Env->TryBind(Context)) {
+                return;
+            }
+        }
+           
         const auto SelfRef = Env->GetObjectRegistry()->GetBoundRef(Context);
-        check(SelfRef!=LUA_NOREF);
+
+        check(SelfRef != LUA_NOREF);
 
         const auto L = Env->GetMainState();
         lua_Integer FuncRef;
