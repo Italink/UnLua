@@ -26,7 +26,7 @@
  * Class descriptor constructor
  */
 FClassDesc::FClassDesc(UStruct* InStruct, const FString& InName, UnLua::FClassRegistry* InClassRegistry)
-    : ClassRegistry(InClassRegistry), Struct(InStruct), ClassName(InName),  UserdataPadding(0), Size(0), FunctionCollection(nullptr)
+    : Struct(InStruct), ClassName(InName),  UserdataPadding(0), Size(0), ClassRegistry(InClassRegistry), FunctionCollection(nullptr)
 {
     RawStructPtr = InStruct;
     bIsScriptStruct = InStruct->IsA(UScriptStruct::StaticClass());

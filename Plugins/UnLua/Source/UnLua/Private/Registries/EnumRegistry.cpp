@@ -27,7 +27,8 @@ namespace UnLua
 
     FEnumRegistry::~FEnumRegistry()
     {
-        Cleanup();
+        for (const auto Pair : Name2Enums)
+            delete Pair.Value;
     }
 
     void FEnumRegistry::Initialize()
@@ -67,21 +68,13 @@ namespace UnLua
         return Ret;
     }
 
-    bool FEnumRegistry::StaticUnregister(const UObjectBase* Enum)
+    bool FEnumRegistry::Unregister(const UObjectBase* Enum)
     {
         FEnumDesc* EnumDesc;
         if (!Enums.RemoveAndCopyValue((UEnum*)Enum, EnumDesc))
             return false;
         EnumDesc->UnLoad();
         return true;
-    }
-
-    void FEnumRegistry::Cleanup()
-    {
-        for (const auto Pair : Name2Enums)
-            delete Pair.Value;
-        Name2Enums.Empty();
-        Enums.Empty();
     }
 
     FEnumDesc* FEnumRegistry::Register(const char* MetatableName)

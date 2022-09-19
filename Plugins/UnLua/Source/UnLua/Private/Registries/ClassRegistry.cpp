@@ -32,7 +32,8 @@ namespace UnLua
 
     FClassRegistry::~FClassRegistry()
     {
-        Cleanup();
+        for (const auto Pair : Name2Classes)
+            delete Pair.Value;
     }
 
     FClassRegistry* FClassRegistry::Find(const lua_State* L)
@@ -285,14 +286,6 @@ namespace UnLua
     {
         const auto MetatableName = LowLevel::GetMetatableName(Class);
         return Register(TCHAR_TO_UTF8(*MetatableName));
-    }
-
-    void FClassRegistry::Cleanup()
-    {
-        for (const auto Pair : Name2Classes)
-            delete Pair.Value;
-        Name2Classes.Empty();
-        Classes.Empty();
     }
 
     UField* FClassRegistry::LoadReflectedType(const char* InName)

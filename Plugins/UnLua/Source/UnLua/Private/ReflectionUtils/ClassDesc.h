@@ -86,8 +86,6 @@ public:
     void UnLoad();
 
 private:
-    UnLua::FClassRegistry* ClassRegistry = nullptr;
-
     UStruct* RawStructPtr; // TODO:refactor
     TWeakObjectPtr<UStruct> Struct;
 
@@ -105,6 +103,8 @@ private:
     TArray<TSharedPtr<FPropertyDesc>> Properties;
     TArray<TSharedPtr<FFunctionDesc>> Functions;
     TArray<FClassDesc*> SuperClasses;
+
+    UnLua::FClassRegistry* ClassRegistry = nullptr;
 
     struct FFunctionCollection *FunctionCollection;
 };

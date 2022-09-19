@@ -45,8 +45,6 @@ namespace UnLua
 
         UField* LoadReflectedType(const char* InName);
 
-        void Cleanup();
-
         bool PushMetatable(lua_State* L, const char* MetatableName);
 
         bool TrySetMetatable(lua_State* L, const char* MetatableName);

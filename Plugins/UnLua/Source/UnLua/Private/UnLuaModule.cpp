@@ -87,8 +87,6 @@ namespace UnLua
             SetActive(false);
             EnvLocator->RemoveFromRoot();
             EnvLocator = nullptr;
-            GUObjectArray.RemoveUObjectCreateListener(this);
-            GUObjectArray.RemoveUObjectDeleteListener(this);
         }
 
         virtual bool IsActive() override
@@ -180,9 +178,6 @@ namespace UnLua
 
         virtual void OnUObjectArrayShutdown() override
         {
-            if (!bIsActive)
-                return;
-
             GUObjectArray.RemoveUObjectCreateListener(this);
             GUObjectArray.RemoveUObjectDeleteListener(this);
 
