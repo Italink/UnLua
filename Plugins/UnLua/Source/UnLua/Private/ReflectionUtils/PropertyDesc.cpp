@@ -1174,9 +1174,17 @@ public:
     explicit FScriptStructPropertyDesc(FProperty *InProperty)
         : FStructPropertyDesc(InProperty), StructName(*UnLua::LowLevel::GetMetatableName(StructProperty->Struct))
     {
-        FClassDesc *ClassDesc = UnLua::FClassRegistry::RegisterReflectedType(StructProperty->Struct);
+        auto ClassReg = (*UnLua::FLuaEnv::GetAll().begin()).Value->GetClassRegistry();
+        FClassDesc* ClassDesc = ClassReg->RegisterReflectedType(StructProperty->Struct);
         StructSize = ClassDesc->GetSize();
         UserdataPadding = ClassDesc->GetUserdataPadding();                          // padding size for userdata
+
+        //UnLua::FClassRegistry::StaticRegisterReflectedType(StructProperty->Struct);
+
+        //UScriptStruct::ICppStructOps* CppStructOps = StructProperty->Struct->GetCppStructOps();
+        //int32 Alignment = CppStructOps ? CppStructOps->GetAlignment() : StructProperty->Struct->GetMinAlignment();
+        //StructSize = CppStructOps ? CppStructOps->GetSize() : StructProperty->Struct->GetStructureSize();
+        //UserdataPadding = CalcUserdataPadding(Alignment); // calculate padding size for userdata
 
         //ClassDesc->AddRef();
     }
@@ -1184,9 +1192,16 @@ public:
     FScriptStructPropertyDesc(FProperty *InProperty, bool bDynamicallyCreated)
         : FStructPropertyDesc(InProperty), StructName(*UnLua::LowLevel::GetMetatableName(StructProperty->Struct))
     {
-        FClassDesc *ClassDesc = UnLua::FClassRegistry::RegisterReflectedType(StructProperty->Struct);
+        auto ClassReg = (*UnLua::FLuaEnv::GetAll().begin()).Value->GetClassRegistry();
+        FClassDesc* ClassDesc = ClassReg->RegisterReflectedType(StructProperty->Struct);
         StructSize = ClassDesc->GetSize();
-        UserdataPadding = ClassDesc->GetUserdataPadding();
+        UserdataPadding = ClassDesc->GetUserdataPadding();                          // padding size for userdata
+
+        //UnLua::FClassRegistry::StaticRegisterReflectedType(StructProperty->Struct);
+        //UScriptStruct::ICppStructOps* CppStructOps = StructProperty->Struct->GetCppStructOps();
+        //int32 Alignment = CppStructOps ? CppStructOps->GetAlignment() : StructProperty->Struct->GetMinAlignment();
+        //StructSize = CppStructOps ? CppStructOps->GetSize() : StructProperty->Struct->GetStructureSize();
+        //UserdataPadding = CalcUserdataPadding(Alignment); // calculate padding size for userdata
         bFirstPropOfScriptStruct = false;
     }
 
@@ -1280,7 +1295,7 @@ public:
                 return false;
             }
 
-            FClassDesc* CurrentClassDesc = UnLua::FClassRegistry::Find(MetatableName);
+            FClassDesc* CurrentClassDesc = UnLua::FClassRegistry::Find(L)->Find(MetatableName);
             if (!CurrentClassDesc)
             {
                 ErrorMsg = FString::Printf(TEXT("metatable of userdata needed in registry but got no found"));

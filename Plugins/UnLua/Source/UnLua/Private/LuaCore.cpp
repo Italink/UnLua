@@ -1067,7 +1067,7 @@ static bool RegisterCollisionEnum(lua_State *L, const char *Name, lua_CFunction 
         return true;
     }
 
-    UnLua::FEnumRegistry::StaticRegister(Name);
+    UnLua::FLuaEnv::FindEnvChecked(L).GetEnumRegistry()->StaticRegister(Name);
 
     lua_pop(L, 1);
     luaL_newmetatable(L, Name);
@@ -1277,7 +1277,7 @@ int32 Enum_Index(lua_State *L)
     lua_rawget(L, 1);                   // 3
     check(lua_isstring(L, -1));
     
-    const FEnumDesc *Enum = UnLua::FEnumRegistry::Find(lua_tostring(L, -1));
+    const FEnumDesc *Enum = UnLua::FLuaEnv::FindEnvChecked(L).GetEnumRegistry()->Find(lua_tostring(L, -1));
 	if ((!Enum) 
         || (!Enum->IsValid()))
 	{
@@ -1311,8 +1311,8 @@ int32 Enum_GetMaxValue(lua_State* L)
 		int32 Type = lua_rawget(L, -2);
 		if (Type == LUA_TSTRING)
 		{
-			const char* EnumName = lua_tostring(L, -1);
-			const FEnumDesc* EnumDesc = UnLua::FEnumRegistry::Find(EnumName);
+			const char* EnumName = lua_tostring(L, -1);          
+			const FEnumDesc* EnumDesc = UnLua::FLuaEnv::FindEnvChecked(L).GetEnumRegistry()->Find(EnumName);
 			if (EnumDesc)
 			{
 				UEnum* Enum = EnumDesc->GetEnum();
@@ -1350,7 +1350,7 @@ int32 Enum_GetNameStringByValue(lua_State* L)
         if (Type == LUA_TSTRING)
         {
             const char* EnumName = lua_tostring(L, -1);
-            const FEnumDesc* EnumDesc = UnLua::FEnumRegistry::Find(EnumName);
+            const FEnumDesc* EnumDesc = UnLua::FLuaEnv::FindEnvChecked(L).GetEnumRegistry()->Find(EnumName);
             if (EnumDesc)
             {
                 UEnum* Enum = EnumDesc->GetEnum();
@@ -1389,7 +1389,7 @@ int32 Enum_GetDisplayNameTextByValue(lua_State* L)
         if (Type == LUA_TSTRING)
         {
             const char* EnumName = lua_tostring(L, -1);
-            const FEnumDesc* EnumDesc = UnLua::FEnumRegistry::Find(EnumName);
+            const FEnumDesc* EnumDesc = UnLua::FLuaEnv::FindEnvChecked(L).GetEnumRegistry()->Find(EnumName);
             if (EnumDesc)
             {
                 UEnum* Enum = EnumDesc->GetEnum();
@@ -1786,7 +1786,7 @@ TSharedPtr<UnLua::ITypeInterface> CreateTypeInterface(lua_State *L, int32 Index)
             if (Type == LUA_TSTRING)
             {   
                 const char* Name = lua_tostring(L, -1);
-                FClassDesc *ClassDesc = UnLua::FClassRegistry::Find(Name);
+                FClassDesc *ClassDesc = UnLua::FClassRegistry::Find(L)->Find(Name);
                 if (ClassDesc)
                 {
                     if (ClassDesc->IsClass())
@@ -1802,7 +1802,7 @@ TSharedPtr<UnLua::ITypeInterface> CreateTypeInterface(lua_State *L, int32 Index)
                 }
                 else
                 {
-                    FEnumDesc *EnumDesc = UnLua::FEnumRegistry::Find(Name);
+                    FEnumDesc *EnumDesc = UnLua::FLuaEnv::FindEnvChecked(L).GetEnumRegistry()->Find(Name);
                     if (EnumDesc)
                     {
                         TypeInterface = GPropertyCreator.CreateEnumProperty(EnumDesc->GetEnum());
@@ -1830,7 +1830,7 @@ TSharedPtr<UnLua::ITypeInterface> CreateTypeInterface(lua_State *L, int32 Index)
                 {
                     const char* Name = lua_tostring(L, -1);
 
-                    FClassDesc* ClassDesc = UnLua::FClassRegistry::Find(Name);
+                    FClassDesc* ClassDesc = UnLua::FClassRegistry::Find(L)->Find(Name);
 
                     if (ClassDesc)
                     {

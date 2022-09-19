@@ -20,12 +20,13 @@
 #include "DefaultParamCollection.h"
 #include "LowLevel.h"
 #include "UnLuaModule.h"
+#include "Registries/ClassRegistry.h"
 
 /**
  * Class descriptor constructor
  */
-FClassDesc::FClassDesc(UStruct* InStruct, const FString& InName)
-    : Struct(InStruct), ClassName(InName), UserdataPadding(0), Size(0), FunctionCollection(nullptr)
+FClassDesc::FClassDesc(UStruct* InStruct, const FString& InName, UnLua::FClassRegistry* InClassRegistry)
+    : ClassRegistry(InClassRegistry), Struct(InStruct), ClassName(InName),  UserdataPadding(0), Size(0), FunctionCollection(nullptr)
 {
     RawStructPtr = InStruct;
     bIsScriptStruct = InStruct->IsA(UScriptStruct::StaticClass());
@@ -41,7 +42,7 @@ FClassDesc::FClassDesc(UStruct* InStruct, const FString& InName)
         // register implemented interfaces
         for (FImplementedInterface& Interface : Class->Interfaces)
         {
-            UnLua::FClassRegistry::RegisterReflectedType(Interface.Class);
+            ClassRegistry->RegisterReflectedType(Interface.Class);
         }
 
         FunctionCollection = GDefaultParamCollection.Find(*ClassName);
@@ -59,7 +60,7 @@ FClassDesc::FClassDesc(UStruct* InStruct, const FString& InName)
     while (SuperStruct)
     {
         FString SuperName = UnLua::LowLevel::GetMetatableName(InStruct);
-        FClassDesc* ClassDesc = UnLua::FClassRegistry::RegisterReflectedType(SuperStruct);
+        FClassDesc* ClassDesc = ClassRegistry->RegisterReflectedType(SuperStruct);
         SuperClasses.Add(ClassDesc);
         SuperStruct = SuperStruct->GetInheritanceSuper();
     }
@@ -121,7 +122,7 @@ TSharedPtr<FFieldDesc> FClassDesc::RegisterField(FName FieldName, FClassDesc* Qu
         {
             if (OuterStruct != Struct)
             {
-                FClassDesc* OuterClass = UnLua::FClassRegistry::RegisterReflectedType(OuterStruct);
+                FClassDesc* OuterClass = ClassRegistry->RegisterReflectedType(OuterStruct);
                 check(OuterClass);
                 return OuterClass->RegisterField(FieldName, QueryClass);
             }

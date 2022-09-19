@@ -20,11 +20,17 @@
 
 namespace UnLua
 {
-    TMap<UEnum*, FEnumDesc*> FEnumRegistry::Enums;
-    TMap<FName, FEnumDesc*> FEnumRegistry::Name2Enums;
-
     FEnumRegistry::FEnumRegistry(FLuaEnv* Env)
         : Env(Env)
+    {
+    }
+
+    FEnumRegistry::~FEnumRegistry()
+    {
+        Cleanup();
+    }
+
+    void FEnumRegistry::Initialize()
     {
         const auto L = Env->GetMainState();
         FCollisionHelper::Initialize();

@@ -16,9 +16,14 @@
 
 #include "CoreUObject.h"
 
+
 class FPropertyDesc;
 class FFunctionDesc;
 class FFieldDesc;
+
+namespace UnLua {
+    class FClassRegistry;
+}
 
 /**
  * Class descriptor
@@ -26,7 +31,7 @@ class FFieldDesc;
 class FClassDesc
 {
 public:
-    FClassDesc(UStruct *InStruct, const FString &InName);
+    FClassDesc(UStruct *InStruct, const FString &InName, UnLua::FClassRegistry* InClassRegistry);
 
     FORCEINLINE bool IsValid() const { return true; }
 
@@ -81,6 +86,8 @@ public:
     void UnLoad();
 
 private:
+    UnLua::FClassRegistry* ClassRegistry = nullptr;
+
     UStruct* RawStructPtr; // TODO:refactor
     TWeakObjectPtr<UStruct> Struct;
 

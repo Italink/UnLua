@@ -25,12 +25,14 @@ extern int32 UObject_Delete(lua_State* L);
 
 namespace UnLua
 {
-    TMap<UStruct*, FClassDesc*> FClassRegistry::Classes;
-    TMap<FName, FClassDesc*> FClassRegistry::Name2Classes;
-
     FClassRegistry::FClassRegistry(FLuaEnv* Env)
         : Env(Env)
     {
+    }
+
+    FClassRegistry::~FClassRegistry()
+    {
+        Cleanup();
     }
 
     FClassRegistry* FClassRegistry::Find(const lua_State* L)
@@ -39,6 +41,22 @@ namespace UnLua
         if (Env == nullptr)
             return nullptr;
         return Env->GetClassRegistry();
+    }
+
+    void FClassRegistry::StaticRegisterReflectedType(const char* MetatableName)
+    {
+        auto it = UnLua::FLuaEnv::GetAll();
+        for (auto Env : UnLua::FLuaEnv::GetAll()) {
+            Env.Value->GetClassRegistry()->RegisterReflectedType(MetatableName);
+        }
+    }
+
+    void FClassRegistry::StaticRegisterReflectedType(UStruct* Type)
+    {
+        auto it = UnLua::FLuaEnv::GetAll();
+        for (auto Env : UnLua::FLuaEnv::GetAll()) {
+            Env.Value->GetClassRegistry()->RegisterReflectedType(Type);
+        }
     }
 
     FClassDesc* FClassRegistry::Find(const char* TypeName)
@@ -105,16 +123,19 @@ namespace UnLua
 
     bool FClassRegistry::StaticUnregister(const UObjectBase* Type)
     {
-        FClassDesc* ClassDesc;
-        if (!Classes.RemoveAndCopyValue((UStruct*)Type, ClassDesc))
-            return false;
-        ClassDesc->UnLoad();
+        bool ret = false;
         for (auto Pair : FLuaEnv::AllEnvs)
         {
+            FClassDesc* ClassDesc;
+            if (!Pair.Value->GetClassRegistry()->Classes.RemoveAndCopyValue((UStruct*)Type, ClassDesc)) {
+                continue;
+            }
+            ClassDesc->UnLoad();
             auto Registry = Pair.Value->GetClassRegistry();
             Registry->Unregister(ClassDesc);
+            ret = true;
         }
-        return true;
+        return ret;
     }
 
     bool FClassRegistry::PushMetatable(lua_State* L, const char* MetatableName)
@@ -301,7 +322,7 @@ namespace UnLua
         check(Type);
         check(!Classes.Contains(Type));
 
-        FClassDesc* ClassDesc = new FClassDesc(Type, Name);
+        FClassDesc* ClassDesc = new FClassDesc(Type, Name, this);
         Classes.Add(Type, ClassDesc);
         Name2Classes.Add(FName(*Name), ClassDesc);
 

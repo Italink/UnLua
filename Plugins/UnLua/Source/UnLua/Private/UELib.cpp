@@ -42,7 +42,7 @@ static int UE_Index(lua_State* L)
     const auto& Env = UnLua::FLuaEnv::FindEnvChecked(L);
     if (Prefix == 'U' || Prefix == 'A' || Prefix == 'F')
     {
-        const auto ReflectedType = UnLua::FClassRegistry::LoadReflectedType(Name + 1);
+        const auto ReflectedType = UnLua::FClassRegistry::Find(L)->LoadReflectedType(Name + 1);
         if (!ReflectedType)
             return 0;
 
@@ -59,7 +59,7 @@ static int UE_Index(lua_State* L)
     }
     else if (Prefix == 'E')
     {
-        const auto ReflectedType = UnLua::FClassRegistry::LoadReflectedType(Name);
+        const auto ReflectedType = UnLua::FClassRegistry::Find(L)->LoadReflectedType(Name);
         if (!ReflectedType)
             return 0;
 

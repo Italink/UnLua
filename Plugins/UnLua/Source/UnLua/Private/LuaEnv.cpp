@@ -67,6 +67,8 @@ namespace UnLua
         DelegateRegistry = new FDelegateRegistry(this);
         ContainerRegistry = new FContainerRegistry(this);
         EnumRegistry = new FEnumRegistry(this);
+        EnumRegistry->Initialize();
+
         DeadLoopCheck = new FDeadLoopCheck(this);
 
         AutoObjectReference.SetName("UnLua_AutoReference");
